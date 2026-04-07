@@ -34,9 +34,12 @@ dependencies = [
     "torchaudio>=2.4",
     "transformers>=5.3.0",
     "accelerate",
+    "fastapi",
+    "python-multipart",
     "pydub",
     "gradio",
     "tensorboardX",
+    "uvicorn",
     "webdataset",
     "numpy",
     "soundfile"
