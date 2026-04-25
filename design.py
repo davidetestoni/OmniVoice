@@ -1,6 +1,6 @@
 from omnivoice import OmniVoice
+import soundfile as sf
 import torch
-import torchaudio
 
 model = OmniVoice.from_pretrained(
     "k2-fsa/OmniVoice", device_map="cuda:0", dtype=torch.float16
@@ -17,4 +17,4 @@ for i in range(5):
         language="it",
     )
 
-    torchaudio.save(f"out_{i}.wav", audio[0], 24000)
+    sf.write(f"out_{i}.wav", audio[0], 24000)

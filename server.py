@@ -47,6 +47,8 @@ generation_defaults: dict[str, Any] = {
     "audio_chunk_threshold": 30.0,
 }
 
+AudioArray = np.ndarray | torch.Tensor
+
 
 def _select_device() -> str:
     if torch.cuda.is_available():
@@ -78,16 +80,23 @@ def _ensure_model() -> OmniVoice:
     return model
 
 
-def _tensor_to_pcm16le_bytes(audio: torch.Tensor) -> bytes:
-    pcm = audio.squeeze().detach().cpu().numpy().astype(np.float32)
+def _as_float32_audio(audio: AudioArray) -> np.ndarray:
+    if isinstance(audio, torch.Tensor):
+        pcm = audio.squeeze().detach().cpu().numpy()
+    else:
+        pcm = np.asarray(audio).squeeze()
+    return np.clip(pcm.astype(np.float32), -1.0, 1.0)
+
+
+def _audio_to_pcm16le_bytes(audio: AudioArray) -> bytes:
+    pcm = _as_float32_audio(audio)
     pcm = np.clip(pcm, -1.0, 1.0)
     pcm_i16 = (pcm * 32767.0).astype(np.int16)
     return pcm_i16.tobytes()
 
 
-def _tensor_to_wav_bytes(audio: torch.Tensor, sample_rate: int) -> bytes:
-    wav = audio.squeeze().detach().cpu().numpy().astype(np.float32)
-    wav = np.clip(wav, -1.0, 1.0)
+def _audio_to_wav_bytes(audio: AudioArray, sample_rate: int) -> bytes:
+    wav = _as_float32_audio(audio)
 
     buffer = io.BytesIO()
     sf.write(buffer, wav, sample_rate, format="WAV", subtype="PCM_16")
@@ -248,7 +257,7 @@ async def tts(
         if temp_wav_path is not None:
             Path(temp_wav_path).unlink(missing_ok=True)
 
-    pcm_bytes = _tensor_to_pcm16le_bytes(audios[0])
+    pcm_bytes = _audio_to_pcm16le_bytes(audios[0])
     return Response(
         content=pcm_bytes,
         media_type="audio/pcm",
@@ -301,7 +310,7 @@ async def voice_design(
         logger.exception("Voice design generation failed")
         raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
 
-    wav_bytes = _tensor_to_wav_bytes(audios[0], tts_model.sampling_rate)
+    wav_bytes = _audio_to_wav_bytes(audios[0], tts_model.sampling_rate)
     return Response(
         content=wav_bytes,
         media_type="audio/wav",
