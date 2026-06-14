@@ -49,6 +49,8 @@ audio = model.generate(text="Hello, this is a test of duration control", speed=1
 
 Priority: `duration` > `speed`.
 
+> **Note:** When using `duration`, the default post-processing step may trim trailing silence, causing the actual output to be slightly shorter than the requested duration. If you need the output duration to **exactly** match the specified value, set `postprocess_output=False` to disable silence removal.
+
 ## Pre/Post Processing
 
 | Parameter | Type | Default | Description |

@@ -126,3 +126,4 @@ for Chinese — the model auto-fixes mismatches).
 - **Case-insensitive**: `"Male"`, `"MALE"`, and `"male"` are all accepted, the code will normalize them to lower case.
 
 - **Accent vs Dialect**: English accents are only applied to English speech, Chinese dialects are only applied to Chinese speech.
+- **Attribute combinations**: Due to training data limitations, some attribute combinations may not work well — the model may ignore certain attributes in a combination. If the output doesn't match your expectation, try simplifying the instruct string.
